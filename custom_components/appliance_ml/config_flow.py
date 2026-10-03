@@ -26,6 +26,12 @@ class ApplianceMLConfigFlow(ConfigFlow, domain=DOMAIN):
         })
         return self.async_show_form(step_id="user", data_schema=schema)
 
+    async def async_step_import(self, user_input):
+        """YAML: appliance_ml: [{name, appliance_type, power_entity}]"""
+        await self.async_set_unique_id(user_input[CONF_POWER])
+        self._abort_if_unique_id_configured()
+        return self.async_create_entry(title=user_input["name"], data=user_input)
+
     @staticmethod
     @callback
     def async_get_options_flow(entry: ConfigEntry) -> OptionsFlow:

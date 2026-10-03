@@ -9,13 +9,32 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, ServiceCall
 
 from . import websocket_api
-from .const import DOMAIN
+from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.helpers import config_validation as cv
+
+from .const import CONF_POWER, CONF_TYPE, DOMAIN, PRESETS
 from .manager import ApplianceManager
 
 PLATFORMS = ["sensor", "binary_sensor"]
 PANEL_URL = "appliance-ml"
 STATIC_URL = "/appliance_ml_static"
 VERSION = "1.1.0"
+
+
+_ITEM = vol.Schema({
+    vol.Required("name"): cv.string,
+    vol.Optional(CONF_TYPE, default="washing_machine"): vol.In(list(PRESETS)),
+    vol.Required(CONF_POWER): cv.entity_id,
+})
+CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.All(cv.ensure_list, [_ITEM])}, extra=vol.ALLOW_EXTRA)
+
+
+async def async_setup(hass: HomeAssistant, config: dict) -> bool:
+    """Optional YAML: appliance_ml: [{name, appliance_type, power_entity}] (imported once)."""
+    for item in config.get(DOMAIN, []):
+        hass.async_create_task(hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=item))
+    return True
 
 
 async def _async_register_panel(hass: HomeAssistant) -> None:

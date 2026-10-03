@@ -45,6 +45,15 @@ open an issue with a power curve if yours misbehaves.
 Then *Settings → Devices & services → Add integration → Appliance ML*, choose the appliance type and
 your power sensor (W). Repeat for each appliance. Requires the recorder (default) for learning from history.
 
+## YAML setup (optional)
+```yaml
+appliance_ml:
+  - name: Washing machine
+    appliance_type: washing_machine   # washing_machine | dishwasher | dryer | oven | other
+    power_entity: sensor.washer_power
+```
+The entry is created once on startup and can afterwards be changed in the panel.
+
 ## Notification example
 See `packages/appliance_ml_notify.yaml` (event-triggered automation).
 
