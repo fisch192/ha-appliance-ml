@@ -10,11 +10,11 @@ from homeassistant.core import HomeAssistant, ServiceCall
 
 from . import websocket_api
 from .const import DOMAIN
-from .manager import WasherManager
+from .manager import ApplianceManager
 
 PLATFORMS = ["sensor", "binary_sensor"]
-PANEL_URL = "washer-ml"
-STATIC_URL = "/washer_ml_static"
+PANEL_URL = "appliance-ml"
+STATIC_URL = "/appliance_ml_static"
 VERSION = "1.1.0"
 
 
@@ -26,14 +26,14 @@ async def _async_register_panel(hass: HomeAssistant) -> None:
     await hass.http.async_register_static_paths(
         [StaticPathConfig(STATIC_URL, str(Path(__file__).parent / "frontend"), False)])
     await panel_custom.async_register_panel(
-        hass, webcomponent_name="washer-ml-panel", frontend_url_path=PANEL_URL,
-        module_url=f"{STATIC_URL}/washer-ml-panel.js?v={VERSION}",
-        sidebar_title="Washer ML", sidebar_icon="mdi:washing-machine",
+        hass, webcomponent_name="appliance-ml-panel", frontend_url_path=PANEL_URL,
+        module_url=f"{STATIC_URL}/appliance-ml-panel.js?v={VERSION}",
+        sidebar_title="Appliance ML", sidebar_icon="mdi:washing-machine",
         require_admin=False, config={})
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    manager = WasherManager(hass, entry)
+    manager = ApplianceManager(hass, entry)
     await manager.async_start()
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = manager
     await _async_register_panel(hass)
@@ -66,10 +66,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             **opt, vol.Optional("days", default=30): vol.All(int, vol.Range(min=1, max=365)),
             vol.Optional("reset", default=False): bool}))
         hass.services.async_register(DOMAIN, "rename_program", rename, vol.Schema({
-            **opt, vol.Required("program_id"): str, vol.Required("name"): str}))
+            vol.Required("entry_id"): str, vol.Required("program_id"): str, vol.Required("name"): str}))
         hass.services.async_register(DOMAIN, "delete_program", delete, vol.Schema({
-            **opt, vol.Required("program_id"): str}))
-        hass.services.async_register(DOMAIN, "reset_learning", reset, vol.Schema(opt))
+            vol.Required("entry_id"): str, vol.Required("program_id"): str}))
+        hass.services.async_register(DOMAIN, "reset_learning", reset, vol.Schema({vol.Required("entry_id"): str}))
     return True
 
 

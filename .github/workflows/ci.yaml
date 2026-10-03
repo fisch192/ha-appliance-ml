@@ -8,7 +8,8 @@ jobs:
       - uses: actions/setup-python@v5
         with: {python-version: "3.12"}
       - run: python tests/test_engine.py
-      - run: node --check custom_components/washer_ml/frontend/washer-ml-panel.js
+      - run: python tests/test_appliances.py
+      - run: node --check custom_components/appliance_ml/frontend/appliance-ml-panel.js
   hassfest:
     runs-on: ubuntu-latest
     steps:

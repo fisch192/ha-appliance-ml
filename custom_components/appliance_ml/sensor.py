@@ -2,7 +2,7 @@ from homeassistant.components.sensor import SensorDeviceClass, SensorEntity, Sen
 from homeassistant.const import EntityCategory, PERCENTAGE, UnitOfEnergy, UnitOfTime
 
 from .const import DOMAIN
-from .entity import WasherEntity
+from .entity import ApplianceEntity
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
@@ -11,11 +11,10 @@ async def async_setup_entry(hass, entry, async_add_entities):
                         LastEnergy(m), EndDelay(m)])
 
 
-class Status(WasherEntity, SensorEntity):
-    _attr_icon = "mdi:washing-machine"
-
+class Status(ApplianceEntity, SensorEntity):
     def __init__(self, m):
         super().__init__(m, "status", "Status")
+        self._attr_icon = m.icon
 
     @property
     def native_value(self):
@@ -30,7 +29,7 @@ class Status(WasherEntity, SensorEntity):
         return {"programme": {p.id: p.name for p in e.programs}, "gelernte_zyklen": len(e.history)}
 
 
-class Program(WasherEntity, SensorEntity):
+class Program(ApplianceEntity, SensorEntity):
     _attr_icon = "mdi:format-list-bulleted"
 
     def __init__(self, m):
@@ -50,7 +49,7 @@ class Program(WasherEntity, SensorEntity):
         return {"sicherheit": mt["confidence"]} if mt and self.manager.engine.running else {}
 
 
-class Remaining(WasherEntity, SensorEntity):
+class Remaining(ApplianceEntity, SensorEntity):
     _attr_device_class = SensorDeviceClass.DURATION
     _attr_native_unit_of_measurement = UnitOfTime.MINUTES
 
@@ -66,7 +65,7 @@ class Remaining(WasherEntity, SensorEntity):
         return 0 if not e.running else None
 
 
-class Progress(WasherEntity, SensorEntity):
+class Progress(ApplianceEntity, SensorEntity):
     _attr_native_unit_of_measurement = PERCENTAGE
     _attr_icon = "mdi:progress-clock"
 
@@ -82,7 +81,7 @@ class Progress(WasherEntity, SensorEntity):
         return 0 if not e.running else None
 
 
-class LastDuration(WasherEntity, SensorEntity):
+class LastDuration(ApplianceEntity, SensorEntity):
     _attr_device_class = SensorDeviceClass.DURATION
     _attr_native_unit_of_measurement = UnitOfTime.MINUTES
 
@@ -95,7 +94,7 @@ class LastDuration(WasherEntity, SensorEntity):
         return round(lc["duration_s"] / 60) if lc else None
 
 
-class LastEnergy(WasherEntity, SensorEntity):
+class LastEnergy(ApplianceEntity, SensorEntity):
     _attr_device_class = SensorDeviceClass.ENERGY
     _attr_native_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
     _attr_suggested_display_precision = 2
@@ -109,7 +108,7 @@ class LastEnergy(WasherEntity, SensorEntity):
         return round(lc["energy_wh"] / 1000, 3) if lc else None
 
 
-class EndDelay(WasherEntity, SensorEntity):
+class EndDelay(ApplianceEntity, SensorEntity):
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_native_unit_of_measurement = UnitOfTime.SECONDS
     _attr_icon = "mdi:timer-cog-outline"

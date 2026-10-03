@@ -1,27 +1,27 @@
 // charset: utf-8
-/* Washer ML dashboard panel – vanilla web component, no build step. */
+/* Appliance ML dashboard panel – vanilla web component, no build step. */
 const L = {
   en: {
-    title: "Washer ML", idle: "Ready", running: "Running", ending: "Finishing…", power: "Power", program: "Program",
+    title: "Appliance ML", idle: "Ready", running: "Running", ending: "Finishing…", power: "Power", program: "Program",
     remaining: "Remaining", min: "min", progress: "Progress", recognizing: "recognising…",
     graph24: "Power – last 3 hours", graphLive: "Current cycle vs. learned program",
     live: "Current cycle", learnedCurve: "Learned program", noRun: "No program running. The live comparison appears when a program starts.",
     programs: "Learned programs", noPrograms: "Nothing learned yet – press “Learn from history” or run a program.",
     cycles: "Runs", save: "Save", del: "Delete", rename: "Rename", cfg: "Configuration", sensor: "Power sensor",
-    startW: "Start threshold (W)", endW: "Quiet threshold (W)", minCycle: "Minimum program length (min)",
+    startW: "Start threshold (W)", endW: "Quiet threshold (W)", minCycle: "Minimum program length (min)", maxEnd: "Max. quiet time before finished (min)",
     quiet: "Learned quiet time before “finished”", learnBtn: "Learn from history", days: "days",
     reset: "Reset learning", resetConfirm: "Delete everything that was learned?", saved: "Saved", learning: "Learning…",
     done: "Done", runs: "runs", started: "Started", duration: "Duration", energy: "Energy", pickSensor: "Select power sensor…",
     delConfirm: "Delete this program and its runs?", thresholds: "thresholds", energyShort: "kWh",
   },
   de: {
-    title: "Washer ML", idle: "Bereit", running: "Läuft", ending: "Endet gleich…", power: "Leistung", program: "Programm",
+    title: "Appliance ML", idle: "Bereit", running: "Läuft", ending: "Endet gleich…", power: "Leistung", program: "Programm",
     remaining: "Restzeit", min: "Min", progress: "Fortschritt", recognizing: "wird erkannt…",
     graph24: "Leistung – letzte 3 Stunden", graphLive: "Aktueller Lauf vs. gelerntes Programm",
     live: "Aktueller Lauf", learnedCurve: "Gelerntes Programm", noRun: "Kein Programm aktiv. Der Live-Vergleich erscheint beim Start.",
     programs: "Gelernte Programme", noPrograms: "Noch nichts gelernt – „Aus Verlauf lernen“ drücken oder ein Programm laufen lassen.",
     cycles: "Läufe", save: "Speichern", del: "Löschen", rename: "Umbenennen", cfg: "Konfiguration", sensor: "Leistungssensor",
-    startW: "Start-Schwelle (W)", endW: "Ruhe-Schwelle (W)", minCycle: "Mindestlaufzeit (Min)",
+    startW: "Start-Schwelle (W)", endW: "Ruhe-Schwelle (W)", minCycle: "Mindestlaufzeit (Min)", maxEnd: "Max. Ruhezeit bis „fertig“ (Min)",
     quiet: "Gelernte Ruhezeit bis „fertig“", learnBtn: "Aus Verlauf lernen", days: "Tage",
     reset: "Lernen zurücksetzen", resetConfirm: "Alles Gelernte löschen?", saved: "Gespeichert", learning: "Lerne…",
     done: "Fertig", runs: "Läufe", started: "Start", duration: "Dauer", energy: "Energie", pickSensor: "Leistungssensor wählen…",
@@ -103,7 +103,7 @@ function spark(curve, color = "var(--primary-color)") {
   return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" style="height:44px"><path d="${d}" fill="none" stroke="${color}" stroke-width="1.5"/></svg>`;
 }
 
-class WasherMLPanel extends HTMLElement {
+class ApplianceMLPanel extends HTMLElement {
   constructor() {
     super();
     this.attachShadow({mode: "open"});
@@ -127,7 +127,7 @@ class WasherMLPanel extends HTMLElement {
 
   async _refresh(full) {
     try {
-      this._snap = await this._hass.callWS({type: "washer_ml/snapshot"});
+      this._snap = await this._hass.callWS({type: "appliance_ml/snapshot"});
       const s = this._snap[this._sel];
       if (s && (full || !this._histAt || Date.now() - this._histAt > 60000)) await this._loadHistory(s);
     } catch (e) { this._error = String(e.message || e); }
@@ -152,7 +152,7 @@ class WasherMLPanel extends HTMLElement {
 
   async _call(service, data, busyMsg) {
     this._msg = {text: busyMsg || ""}; this._render();
-    try { await this._hass.callService("washer_ml", service, data); this._msg = {text: this.t.done}; }
+    try { await this._hass.callService("appliance_ml", service, data); this._msg = {text: this.t.done}; }
     catch (e) { this._msg = {text: String(e.message || e), err: true}; }
     await this._refresh(true);
   }
@@ -162,7 +162,7 @@ class WasherMLPanel extends HTMLElement {
     const root = this.shadowRoot;
     if (!s) {
       root.innerHTML = `<style>${STYLE}</style><div class="wrap"><header><h1>${t.title}</h1></header>
-        <div class="card"><div class="empty">${this._error || "…"}<br>Settings → Devices &amp; services → Add integration → Washer ML</div></div></div>`;
+        <div class="card"><div class="empty">${this._error || "…"}<br>Settings → Devices &amp; services → Add integration → Appliance ML</div></div></div>`;
       return;
     }
     const mt = s.live?.match;
@@ -224,7 +224,8 @@ class WasherMLPanel extends HTMLElement {
           <label>${t.sensor}</label><select id="sensor">${opts}</select>
           <div class="row"><div style="flex:1"><label>${t.startW}</label><input id="sw" type="number" min="1" value="${s.config.start_w}"></div>
           <div style="flex:1"><label>${t.endW}</label><input id="ew" type="number" min="1" value="${s.config.end_w}"></div></div>
-          <label>${t.minCycle}</label><input id="mc" type="number" min="1" value="${s.config.min_cycle_min}">
+          <div class="row"><div style="flex:1"><label>${t.minCycle}</label><input id="mc" type="number" min="1" value="${s.config.min_cycle_min}"></div>
+          <div style="flex:1"><label>${t.maxEnd}</label><input id="me" type="number" min="1" value="${s.config.max_end_min}"></div></div>
           <button id="savecfg">${t.save}</button>
           <hr style="border:0;border-top:1px solid var(--divider-color);margin:16px 0 4px">
           <div class="k" style="font-size:12px;color:var(--secondary-text-color)">${t.quiet}: <b>${s.end_delay_s} s</b></div>
@@ -244,8 +245,8 @@ class WasherMLPanel extends HTMLElement {
     $("#dev")?.addEventListener("change", e => { this._sel = +e.target.value; this._histAt = 0; this._refresh(true); });
     $("#savecfg").onclick = async () => {
       try {
-        await this._hass.callWS({type: "washer_ml/configure", entry_id: s.entry_id, power_entity: $("#sensor").value,
-          start_w: +$("#sw").value, end_w: +$("#ew").value, min_cycle_min: +$("#mc").value});
+        await this._hass.callWS({type: "appliance_ml/configure", entry_id: s.entry_id, power_entity: $("#sensor").value,
+          start_w: +$("#sw").value, end_w: +$("#ew").value, min_cycle_min: +$("#mc").value, max_end_min: +$("#me").value});
         this._msg = {text: t.saved};
         setTimeout(() => this._refresh(true), 1500);
       } catch (e) { this._msg = {text: String(e.message || e), err: true}; }
@@ -262,4 +263,4 @@ class WasherMLPanel extends HTMLElement {
     });
   }
 }
-customElements.define("washer-ml-panel", WasherMLPanel);
+customElements.define("appliance-ml-panel", ApplianceMLPanel);

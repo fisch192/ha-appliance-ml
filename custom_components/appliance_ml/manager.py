@@ -10,22 +10,27 @@ from homeassistant.helpers.event import async_track_state_change_event, async_tr
 from homeassistant.helpers.storage import Store
 from homeassistant.util import dt as dt_util
 
-from .const import (CONF_END_W, CONF_MIN_CYCLE, CONF_POWER, CONF_START_W, EVENT_FINISHED,
-                    EVENT_STARTED, SIGNAL)
+from .const import (CONF_END_W, CONF_MAX_END, CONF_MIN_CYCLE, CONF_POWER, CONF_START_W, CONF_TYPE,
+                    EVENT_FINISHED, EVENT_STARTED, PRESETS, SIGNAL)
 from .engine import Config, Engine
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class WasherManager:
+class ApplianceManager:
     def __init__(self, hass: HomeAssistant, entry):
         self.hass, self.entry = hass, entry
         self.power_entity = entry.data[CONF_POWER]
         o = entry.options
+        self.type = entry.data.get(CONF_TYPE, "washing_machine")
+        pre = PRESETS.get(self.type, PRESETS["other"])
+        self.icon = pre["icon"]
         self.engine = Engine(Config(
-            start_w=o.get(CONF_START_W, 45), end_w=o.get(CONF_END_W, 45),
-            min_cycle_s=o.get(CONF_MIN_CYCLE, 15) * 60))
-        self.store = Store(hass, 1, f"washer_ml.{entry.entry_id}")
+            start_w=o.get(CONF_START_W, pre["start_w"]), end_w=o.get(CONF_END_W, pre["end_w"]),
+            min_cycle_s=o.get(CONF_MIN_CYCLE, pre["min_cycle_min"]) * 60,
+            min_end_s=pre["min_end_s"], default_end_s=pre["default_end_s"],
+            max_end_s=o.get(CONF_MAX_END, pre["max_end_min"]) * 60, min_peak_w=pre["min_peak_w"]))
+        self.store = Store(hass, 1, f"appliance_ml.{entry.entry_id}")
         self.last_cycle: dict | None = None
         self._dirty = False
         self._unsubs = []
@@ -81,12 +86,12 @@ class WasherManager:
     def _handle(self, events: list[dict]):
         for ev in events:
             if ev["type"] == "started":
-                self.hass.bus.async_fire(EVENT_STARTED, {"entry": self.entry.title})
+                self.hass.bus.async_fire(EVENT_STARTED, {"entry": self.entry.title, "appliance": self.type})
             elif ev["type"] == "finished":
                 self.last_cycle = ev
                 self._dirty = True
                 self.hass.bus.async_fire(EVENT_FINISHED, {
-                    "entry": self.entry.title, "program": ev["name"],
+                    "entry": self.entry.title, "appliance": self.type, "program": ev["name"],
                     "duration_min": round(ev["duration_s"] / 60), "energy_kwh": round(ev["energy_wh"] / 1000, 2),
                     "new_program": ev["new_program"]})
         if events:
@@ -123,7 +128,7 @@ class WasherManager:
             self.engine = fresh
         self.last_cycle = self.engine.history[-1] if self.engine.history else None
         await self.store.async_save(self.engine.dump())
-        _LOGGER.info("washer_ml learned from %s states, %s new cycles", len(states), count)
+        _LOGGER.info("appliance_ml learned from %s states, %s new cycles", len(states), count)
         async_dispatcher_send(self.hass, self.signal)
 
     async def async_rename_program(self, program_id: str, name: str):
@@ -156,10 +161,11 @@ class WasherManager:
                     "quiet_since": e.quiet_since, "match": mt, "prototype": [round(x) for x in proto] if proto else None,
                     "energy_wh": round(e.energy_ws / 3600, 1)}
         return {
-            "entry_id": self.entry.entry_id, "name": self.entry.title,
+            "entry_id": self.entry.entry_id, "name": self.entry.title, "type": self.type,
             "power_entity": self.power_entity,
             "power": float(st.state) if st and st.state.replace(".", "", 1).replace("-", "", 1).isdigit() else None,
-            "config": {"start_w": e.cfg.start_w, "end_w": e.cfg.end_w, "min_cycle_min": e.cfg.min_cycle_s / 60},
+            "config": {"start_w": e.cfg.start_w, "end_w": e.cfg.end_w, "min_cycle_min": e.cfg.min_cycle_s / 60,
+                       "max_end_min": e.cfg.max_end_s / 60},
             "running": e.running, "end_delay_s": round(e.end_delay_s), "live": live,
             "programs": [{"id": p.id, "name": p.name, "count": len(p.durations),
                           "duration_min": round(p.duration_s / 60), "energy_wh": round(p.energy_wh),

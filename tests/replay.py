@@ -1,6 +1,6 @@
 import json, sys
 from pathlib import Path
-sys.path.insert(0, str(Path(__file__).parents[1] / "custom_components" / "washer_ml"))
+sys.path.insert(0, str(Path(__file__).parents[1] / "custom_components" / "appliance_ml"))
 from engine import Engine
 
 def replay(cycles, engine=None, gap=3600):

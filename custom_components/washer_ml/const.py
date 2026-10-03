@@ -1,8 +1,0 @@
-DOMAIN = "washer_ml"
-CONF_POWER = "power_entity"
-CONF_START_W = "start_w"
-CONF_END_W = "end_w"
-CONF_MIN_CYCLE = "min_cycle_min"
-SIGNAL = f"{DOMAIN}_update_{{}}"
-EVENT_STARTED = f"{DOMAIN}_cycle_started"
-EVENT_FINISHED = f"{DOMAIN}_cycle_finished"

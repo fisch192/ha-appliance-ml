@@ -4,9 +4,13 @@ learn_from_history:
     reset: {default: false, selector: {boolean: {}}}
 rename_program:
   fields:
+    entry_id: {required: true, selector: {text: {}}}
     program_id: {required: true, example: p1, selector: {text: {}}}
     name: {required: true, example: Buntwäsche 40°, selector: {text: {}}}
 reset_learning:
+  fields:
+    entry_id: {required: true, selector: {text: {}}}
 delete_program:
   fields:
+    entry_id: {required: true, selector: {text: {}}}
     program_id: {required: true, example: p1, selector: {text: {}}}
