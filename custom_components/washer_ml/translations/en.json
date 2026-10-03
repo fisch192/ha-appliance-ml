@@ -1,0 +1,5 @@
+{
+  "config": {"step": {"user": {"title": "Washer ML", "data": {"name": "Name", "power_entity": "Power sensor (W)"}}},
+            "abort": {"already_configured": "This power sensor is already configured"}},
+  "options": {"step": {"init": {"data": {"start_w": "Start threshold (W)", "end_w": "Quiet threshold (W)", "min_cycle_min": "Minimum program length (min)"}}}}
+}

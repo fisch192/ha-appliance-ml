@@ -1,0 +1,13 @@
+{
+  "domain": "washer_ml",
+  "name": "Washer ML",
+  "version": "1.1.0",
+  "documentation": "https://github.com/",
+  "config_flow": true,
+  "integration_type": "service",
+  "iot_class": "calculated",
+  "dependencies": ["http", "frontend", "panel_custom", "websocket_api"],
+  "after_dependencies": ["recorder"],
+  "requirements": [],
+  "codeowners": []
+}

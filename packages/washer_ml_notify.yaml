@@ -1,0 +1,16 @@
+# Notifications driven by the washer_ml integration events.
+# Example: replace notify.notify with your own notify service (e.g. notify.mobile_app_<phone>).
+automation:
+  - id: washer_ml_finished_notify
+    alias: "Waschmaschine · fertig (ML)"
+    mode: queued
+    triggers:
+      - trigger: event
+        event_type: washer_ml_cycle_finished
+    actions:
+      - action: notify.notify
+        data:
+          title: Waschmaschine fertig
+          message: >-
+            {{ trigger.event.data.program }} · {{ trigger.event.data.duration_min }} Min ·
+            {{ trigger.event.data.energy_kwh }} kWh

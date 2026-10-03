@@ -1,0 +1,12 @@
+learn_from_history:
+  fields:
+    days: {default: 30, selector: {number: {min: 1, max: 365}}}
+    reset: {default: false, selector: {boolean: {}}}
+rename_program:
+  fields:
+    program_id: {required: true, example: p1, selector: {text: {}}}
+    name: {required: true, example: Buntwäsche 40°, selector: {text: {}}}
+reset_learning:
+delete_program:
+  fields:
+    program_id: {required: true, example: p1, selector: {text: {}}}
