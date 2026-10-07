@@ -1,0 +1,135 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Appliance ML",
+        "description": "Gemessen: das Gerät hat einen eigenen Leistungssensor. Geschätzt: kein Leistungsmesser – der Verbrauch wird aus Hausleistung und Betriebszustand gelernt.",
+        "data": {
+          "name": "Name",
+          "appliance_type": "Gerätetyp",
+          "mode": "Modus"
+        }
+      },
+      "metered": {
+        "title": "Leistungssensor",
+        "data": {
+          "power_entity": "Leistungssensor (W)"
+        }
+      },
+      "estimated": {
+        "title": "Gerät ohne Leistungsmesser",
+        "description": "Wähle die Entität, die „läuft“ meldet (z. B. Home-Connect-Betriebszustand), und die Hausgesamtleistung. Eine Programmnamen-Entität ist optional.",
+        "data": {
+          "activity_entity": "Betriebszustands-Entität",
+          "active_states": "Zustände für „läuft“ (Komma getrennt)",
+          "total_power_entity": "Hausgesamtleistung (W)",
+          "program_entity": "Programm-Entität (optional)"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "Dieses Gerät ist bereits eingerichtet"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "start_w": "Start-Schwelle (W)",
+          "end_w": "Ruhe-Schwelle (W)",
+          "min_cycle_min": "Mindestlaufzeit (Min)",
+          "max_end_min": "Max. Ruhezeit bis „fertig“ (Min)"
+        }
+      }
+    }
+  },
+  "selector": {
+    "appliance_type": {
+      "options": {
+        "washing_machine": "Waschmaschine",
+        "dishwasher": "Geschirrspüler",
+        "dryer": "Trockner",
+        "oven": "Backofen",
+        "fridge": "Kühlschrank / Gefrierer (Gesundheit)",
+        "baseload": "Haus-Grundlast (Gesundheit)",
+        "other": "Anderes Gerät"
+      }
+    },
+    "mode": {
+      "options": {
+        "metered": "Gemessen (eigener Leistungssensor)",
+        "estimated": "Geschätzt (kein Leistungsmesser)"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "status": {
+        "name": "Status",
+        "state": {
+          "idle": "Bereit",
+          "running": "Läuft",
+          "finishing": "Endet gleich"
+        }
+      },
+      "program": {
+        "name": "Programm"
+      },
+      "remaining": {
+        "name": "Restzeit"
+      },
+      "progress": {
+        "name": "Fortschritt"
+      },
+      "last_duration": {
+        "name": "Letzte Laufzeit"
+      },
+      "last_energy": {
+        "name": "Letzter Verbrauch"
+      },
+      "end_delay": {
+        "name": "Gelernte Ruhezeit bis Programmende"
+      },
+      "est_power": {
+        "name": "Geschätzte Leistung"
+      },
+      "est_energy": {
+        "name": "Geschätzte Energie"
+      },
+      "mon_energy": {
+        "name": "Energie 24 h"
+      },
+      "mon_usual_energy": {
+        "name": "Üblich 24 h"
+      },
+      "mon_duty": {
+        "name": "Laufanteil 24 h"
+      },
+      "mon_starts": {
+        "name": "Starts 24 h"
+      },
+      "mon_base": {
+        "name": "Grundlast"
+      },
+      "mon_usual_base": {
+        "name": "Übliche Grundlast"
+      },
+      "mon_reason": {
+        "name": "Gesundheit",
+        "state": {
+          "learning": "Lernt",
+          "ok": "OK",
+          "problem": "Auffällig"
+        }
+      }
+    },
+    "binary_sensor": {
+      "running": {
+        "name": "Programm läuft"
+      },
+      "problem": {
+        "name": "Problem"
+      }
+    }
+  }
+}

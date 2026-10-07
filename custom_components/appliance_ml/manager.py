@@ -95,11 +95,16 @@ class ApplianceManager:
             return
         self._ingest_estimated(entity_id, state.state, ts)
 
+    def _scale(self, entity_id) -> float:
+        """Any entity can be the power source: convert kW / mW readings to W."""
+        st = self.hass.states.get(entity_id) if entity_id else None
+        return {"kW": 1000.0, "mW": 0.001, "MW": 1e6}.get(st.attributes.get("unit_of_measurement") if st else None, 1.0)
+
     def _ingest_estimated(self, entity_id, raw, ts):
         tr = self.tracker
         if entity_id == self.total_entity:
             try:
-                w = float(raw)
+                w = float(raw) * self._scale(entity_id)
             except (TypeError, ValueError):
                 return
             self._handle(tr.feed_total(ts, w))
@@ -114,7 +119,7 @@ class ApplianceManager:
 
     def _ingest(self, raw, ts):
         try:
-            power = float(raw)
+            power = float(raw) * self._scale(self.power_entity)
         except (TypeError, ValueError):
             return
         if not math.isfinite(power):
@@ -178,6 +183,11 @@ class ApplianceManager:
     async def async_learn_from_history(self, days: int = 30, reset: bool = False):
         from homeassistant.components.recorder import get_instance, history
 
+        try:
+            get_instance(self.hass)
+        except KeyError:
+            return                          # recorder not loaded: learn from live data only
+
         end = dt_util.utcnow()
         start = end - timedelta(days=days)
         if self.mode == "estimated":
@@ -201,7 +211,7 @@ class ApplianceManager:
         count = 0
         for st in states:
             try:
-                p = float(st.state)
+                p = float(st.state) * self._scale(self.power_entity)
             except ValueError:
                 continue
             for ev in fresh.feed(st.last_updated.timestamp(), p):
@@ -228,7 +238,7 @@ class ApplianceManager:
             fresh.load(self.monitor.dump())
         for st in states:
             try:
-                fresh.feed(st.last_updated.timestamp(), float(st.state))
+                fresh.feed(st.last_updated.timestamp(), float(st.state) * self._scale(self.power_entity))
             except ValueError:
                 continue
         fresh.evaluate(end.timestamp())
@@ -258,7 +268,7 @@ class ApplianceManager:
         for ts, ent, raw in events:
             if ent == self.total_entity:
                 try:
-                    trk.feed_total(ts, float(raw))
+                    trk.feed_total(ts, float(raw) * self._scale(self.total_entity))
                 except ValueError:
                     pass
             elif ent == self.program_entity:
@@ -331,13 +341,18 @@ class ApplianceManager:
             "baseline_w": round(self.tracker.baseline) if self.tracker else None,
             "est_energy_kwh": round(self.engine.total_est_wh / 1000, 3) if self.tracker else None,
             "power": power if self.mode == "estimated" else
-                     (float(st.state) if st and st.state.replace(".", "", 1).replace("-", "", 1).isdigit() else None),
+                     (float(st.state) * self._scale(self.power_entity) if st and st.state.replace(".", "", 1).replace("-", "", 1).isdigit() else None),
             "config": {"start_w": e.cfg.start_w, "end_w": e.cfg.end_w, "min_cycle_min": e.cfg.min_cycle_s / 60,
                        "max_end_min": e.cfg.max_end_s / 60},
             "running": e.running, "end_delay_s": round(e.end_delay_s), "live": live,
             "programs": [{"id": p.id, "name": p.name, "count": len(p.durations),
                           "duration_min": round(p.duration_s / 60), "energy_wh": round(p.energy_wh),
-                          "curve": [round(x) for x in (p.exemplars[-1] if p.exemplars else [])]}
+                          "curve": [round(x) for x in (p.exemplars[-1] if p.exemplars else [])],
+                          "model": [round(x) for x in p.model_curve(0.5)],
+                          "band_lo": [round(x) for x in p.model_curve(0.1)],
+                          "band_hi": [round(x) for x in p.model_curve(0.9)],
+                          "durations_min": [round(d / 60, 1) for d in p.durations[-20:]],
+                          "energies_wh": [round(x) for x in p.energies[-20:]]}
                          for p in e.programs],
             "history": e.history[-30:][::-1],
         }

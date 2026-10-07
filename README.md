@@ -35,15 +35,53 @@ open an issue with a power curve if yours misbehaves.
 * **Dashboard panel** (sidebar "Appliance ML"): live power graph, current cycle vs. learned program,
   learned programs (rename / delete), run list, and configuration (power sensor, thresholds,
   *Learn from history*, *Reset*).
-* Entities: `binary_sensor … running`, `sensor … status / program / remaining / progress / last duration / last energy / learned quiet time`.
+* Entities (names follow your Home Assistant language, English and German included): `binary_sensor … program running`, `sensor … status (idle / running / finishing) / program / remaining time / progress / last run duration / last run energy / learned quiet time`.
 * Events: `appliance_ml_cycle_started`, `appliance_ml_cycle_finished` (`appliance`, `entry`, `program`, `duration_min`, `energy_kwh`, `new_program`).
 
-## Install
-**HACS:** HACS → ⋮ → Custom repositories → add `https://github.com/fisch192/ha-appliance-ml` (category *Integration*) → install → restart.
-**Manual:** copy `custom_components/appliance_ml` to `<config>/custom_components/`, restart.
+## Quick start (5 minutes)
 
-Then *Settings → Devices & services → Add integration → Appliance ML*, choose the appliance type and
-your power sensor (W). Repeat for each appliance. Requires the recorder (default) for learning from history.
+**1. Install**
+HACS → ⋮ → *Custom repositories* → add `https://github.com/fisch192/ha-appliance-ml`, category *Integration* → install **Appliance ML** → restart Home Assistant.
+(Manual: copy `custom_components/appliance_ml` into `<config>/custom_components/` and restart.)
+
+**2. Make sure Home Assistant can see the power of your appliance**
+You need *one* of these – pick what you have:
+
+| Your situation | What to use |
+|---|---|
+| Smart plug that measures power (Shelly, Tasmota, Zigbee, TP-Link, Fritz!DECT, …) between wall and washing machine | the plug's **power sensor** (W). Best accuracy. |
+| Built-in machine without plug, but integrated in HA (e.g. Home Connect / Bosch / Siemens dishwasher) | its **run-state entity** (`run`, `ready`, …) **plus** your **house total power** sensor. The appliance's own consumption is learned from the difference. |
+
+Any entity works – it does not have to be flagged as a "power" sensor (kW values are converted automatically).
+
+**3. Add the appliance**
+*Settings → Devices & services → Add integration → Appliance ML.*
+Choose the appliance type (washing machine, dishwasher, dryer, …), a name and the power sensor (or the run-state + house power). Repeat for each appliance.
+
+**4. Open the "Appliance ML" side menu**
+After the first appliance a new entry **Appliance ML** appears in the Home Assistant sidebar. From there you can add more appliances with the step-by-step wizard (*+ Add appliance*): pick the type → choose *Smart plug* or *No plug* → pick the sensor from a live list (the value of the right plug jumps when you switch the machine on; search by name, device or entity id, or tick *Show all entities*).
+
+**5. Just use the machine**
+Nothing else to configure. History from the recorder (30 days) is imported right away, every new run is learned automatically.
+After the first complete run the program shows up in the panel; after 2–3 runs the program is recognised while it runs and the remaining time becomes accurate.
+
+## The side menu: what you see
+
+| Tab | Content |
+|---|---|
+| **Overview** | live power, detected program, remaining time and progress, power graph of the last 3 hours, current run drawn over the learned program, list of runs |
+| **What it learned** | for every program: typical power curve with its spread, duration and energy of every run, number of runs and how reliable the recognition is; rename programs (“Eco 50 °C”) or delete them; learned quiet time before “finished” |
+| **Settings** | choose any entity as power source, thresholds, *Learn from history*, *Reset learning*, remove the appliance |
+| **+ Add appliance** | the setup wizard described above |
+
+## Dishwasher & washing machine – recommended setup
+* **Washing machine:** smart plug with power measurement (validated on 12 real programs, alert ≈ 3 min after the last spin).
+* **Dishwasher:** if it is not behind a plug, use *No plug*: run-state entity (Home Connect `Operation state` – states `run`/`running`), your **house total power** sensor, optional program entity (`Active program`). The energy per program is learned from the house-power difference, runs disturbed by other big loads are detected and ignored.
+
+## Troubleshooting
+* *The finished alert never comes / comes too early* → *Settings*: lower/raise the quiet threshold (W) to just above your machine's standby pulses; the quiet time then adapts by itself.
+* *Nothing is learned* → check that the chosen entity really changes while the machine runs (Overview graph). The recorder must be enabled to import history.
+* *Wrong sensor chosen* → *Settings → Power sensor*, any entity can be selected, then *Learn from history*.
 
 ## YAML setup (optional)
 ```yaml
@@ -86,9 +124,8 @@ learned quiet time adapts after a few cycles.
 
 ## Development
 `python3 tests/test_engine.py` replays 12 recorded washing-machine programs (`tests/recorded_cycles.json`); `python3 tests/test_appliances.py` uses synthetic dishwasher/dryer curves; `tests/test_estimator.py` and `tests/test_monitor.py` cover estimated mode and the monitors.
+`tests/ha/` runs the integration against a real Home Assistant core (`pip install pytest-homeassistant-custom-component`, then `pytest tests/ha`).
 `python3 tests/replay.py` prints, per program, the delay between last spin and alert.
-The Home Assistant glue (config flow, entities, panel) was developed against HA 2026.x; the
-engine is covered by tests, the integration layer was checked syntactically and the panel was
-rendered in a headless browser with mock data.
+The Home Assistant glue (config flow, entities, websocket API, panel registration) is tested against a real Home Assistant core (2026.2); the panel was rendered in a headless browser with mock data.
 
 License: MIT

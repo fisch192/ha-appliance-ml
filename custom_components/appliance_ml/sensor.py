@@ -25,6 +25,9 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
 
 class Status(ApplianceEntity, SensorEntity):
+    _attr_device_class = SensorDeviceClass.ENUM
+    _attr_options = ["idle", "running", "finishing"]
+
     def __init__(self, m):
         super().__init__(m, "status", "Status")
         self._attr_icon = m.icon
@@ -33,13 +36,13 @@ class Status(ApplianceEntity, SensorEntity):
     def native_value(self):
         e = self.manager.engine
         if not e.running:
-            return "Bereit"
-        return "Schleudern/Ende" if e.quiet_since is not None else "Läuft"
+            return "idle"
+        return "finishing" if e.quiet_since is not None else "running"
 
     @property
     def extra_state_attributes(self):
         e = self.manager.engine
-        return {"programme": {p.id: p.name for p in e.programs}, "gelernte_zyklen": len(e.history)}
+        return {"programs": {p.id: p.name for p in e.programs}, "learned_cycles": len(e.history)}
 
 
 class Program(ApplianceEntity, SensorEntity):
@@ -52,14 +55,14 @@ class Program(ApplianceEntity, SensorEntity):
     def native_value(self):
         mt = self.manager.engine.match
         if self.manager.engine.running:
-            return mt["name"] if mt and mt["confidence"] >= 0.3 else "wird erkannt…"
+            return mt["name"] if mt and mt["confidence"] >= 0.3 else "recognising…"
         lc = self.manager.last_cycle
         return lc["name"] if lc else None
 
     @property
     def extra_state_attributes(self):
         mt = self.manager.engine.match
-        return {"sicherheit": mt["confidence"]} if mt and self.manager.engine.running else {}
+        return {"confidence": mt["confidence"]} if mt and self.manager.engine.running else {}
 
 
 class Remaining(ApplianceEntity, SensorEntity):
@@ -187,6 +190,9 @@ class MonNumber(ApplianceEntity, SensorEntity):
 
 
 class MonReason(ApplianceEntity, SensorEntity):
+    _attr_device_class = SensorDeviceClass.ENUM
+    _attr_options = ["learning", "ok", "problem"]
+
     _attr_icon = "mdi:heart-pulse"
 
     def __init__(self, m):
@@ -196,11 +202,11 @@ class MonReason(ApplianceEntity, SensorEntity):
     def native_value(self):
         mon = self.manager.monitor
         if mon.summary.get("learning"):
-            return "Lernt (%s/5 Tage)" % min(5, mon.summary.get("ref_days", 0))
-        return "OK" if not mon.problems else "Auffällig"
+            return "learning"
+        return "ok" if not mon.problems else "problem"
 
     @property
     def extra_state_attributes(self):
         from .const import PROBLEM_TEXT
-        return {"gruende": self.manager.monitor.problems,
+        return {"reasons": self.manager.monitor.problems, "reference_days": self.manager.monitor.summary.get("ref_days", 0),
                 "text": "; ".join(PROBLEM_TEXT.get(r, r) for r in self.manager.monitor.problems)}

@@ -1,18 +1,135 @@
 {
   "config": {
     "step": {
-      "user": {"title": "Appliance ML", "description": "Metered: the appliance has its own power sensor. Estimated: no power meter - the energy is learned from the house power and the appliance's run state.",
-               "data": {"name": "Name", "appliance_type": "Appliance type", "mode": "Mode"}},
-      "metered": {"title": "Power sensor", "data": {"power_entity": "Power sensor (W)"}},
-      "estimated": {"title": "Appliance without power meter",
-                    "description": "Pick the entity that says the appliance is running (e.g. a Home Connect operation state) and the house total power. A program-name entity is optional but makes recognition exact.",
-                    "data": {"activity_entity": "Run-state entity", "active_states": "States meaning running (comma separated)", "total_power_entity": "House total power (W)", "program_entity": "Program entity (optional)"}}
+      "user": {
+        "title": "Appliance ML",
+        "description": "Metered: the appliance has its own power sensor. Estimated: no power meter - the energy is learned from the house power and the appliance's run state.",
+        "data": {
+          "name": "Name",
+          "appliance_type": "Appliance type",
+          "mode": "Mode"
+        }
+      },
+      "metered": {
+        "title": "Power sensor",
+        "data": {
+          "power_entity": "Power sensor (W)"
+        }
+      },
+      "estimated": {
+        "title": "Appliance without power meter",
+        "description": "Pick the entity that says the appliance is running (e.g. a Home Connect operation state) and the house total power. A program-name entity is optional but makes recognition exact.",
+        "data": {
+          "activity_entity": "Run-state entity",
+          "active_states": "States meaning running (comma separated)",
+          "total_power_entity": "House total power (W)",
+          "program_entity": "Program entity (optional)"
+        }
+      }
     },
-    "abort": {"already_configured": "This appliance is already configured"}
+    "abort": {
+      "already_configured": "This appliance is already configured"
+    }
   },
-  "options": {"step": {"init": {"data": {"start_w": "Start threshold (W)", "end_w": "Quiet threshold (W)", "min_cycle_min": "Minimum program length (min)", "max_end_min": "Maximum quiet time before finished (min)"}}}},
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "start_w": "Start threshold (W)",
+          "end_w": "Quiet threshold (W)",
+          "min_cycle_min": "Minimum program length (min)",
+          "max_end_min": "Maximum quiet time before finished (min)"
+        }
+      }
+    }
+  },
   "selector": {
-    "appliance_type": {"options": {"washing_machine": "Washing machine", "dishwasher": "Dishwasher", "dryer": "Tumble dryer", "oven": "Oven", "fridge": "Fridge / freezer (health monitor)", "baseload": "House base load (health monitor)", "other": "Other appliance"}},
-    "mode": {"options": {"metered": "Metered (own power sensor)", "estimated": "Estimated (no power meter)"}}
+    "appliance_type": {
+      "options": {
+        "washing_machine": "Washing machine",
+        "dishwasher": "Dishwasher",
+        "dryer": "Tumble dryer",
+        "oven": "Oven",
+        "fridge": "Fridge / freezer (health monitor)",
+        "baseload": "House base load (health monitor)",
+        "other": "Other appliance"
+      }
+    },
+    "mode": {
+      "options": {
+        "metered": "Metered (own power sensor)",
+        "estimated": "Estimated (no power meter)"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "status": {
+        "name": "Status",
+        "state": {
+          "idle": "Idle",
+          "running": "Running",
+          "finishing": "Finishing"
+        }
+      },
+      "program": {
+        "name": "Program"
+      },
+      "remaining": {
+        "name": "Remaining time"
+      },
+      "progress": {
+        "name": "Progress"
+      },
+      "last_duration": {
+        "name": "Last run duration"
+      },
+      "last_energy": {
+        "name": "Last run energy"
+      },
+      "end_delay": {
+        "name": "Learned quiet time before finished"
+      },
+      "est_power": {
+        "name": "Estimated power"
+      },
+      "est_energy": {
+        "name": "Estimated energy"
+      },
+      "mon_energy": {
+        "name": "Energy 24 h"
+      },
+      "mon_usual_energy": {
+        "name": "Usual energy 24 h"
+      },
+      "mon_duty": {
+        "name": "Duty 24 h"
+      },
+      "mon_starts": {
+        "name": "Starts 24 h"
+      },
+      "mon_base": {
+        "name": "Base load"
+      },
+      "mon_usual_base": {
+        "name": "Usual base load"
+      },
+      "mon_reason": {
+        "name": "Health",
+        "state": {
+          "learning": "Learning",
+          "ok": "OK",
+          "problem": "Needs attention"
+        }
+      }
+    },
+    "binary_sensor": {
+      "running": {
+        "name": "Program running"
+      },
+      "problem": {
+        "name": "Problem"
+      }
+    }
   }
 }

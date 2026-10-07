@@ -12,6 +12,14 @@ jobs:
       - run: python tests/test_estimator.py
       - run: python tests/test_monitor.py
       - run: node --check custom_components/appliance_ml/frontend/appliance-ml-panel.js
+  homeassistant:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.13"}
+      - run: pip install pytest-homeassistant-custom-component home-assistant-frontend
+      - run: pytest tests/ha -q
   hassfest:
     runs-on: ubuntu-latest
     steps:

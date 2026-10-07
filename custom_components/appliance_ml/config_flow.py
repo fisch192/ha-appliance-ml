@@ -37,7 +37,7 @@ class ApplianceMLConfigFlow(ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured()
             return self.async_create_entry(title=data["name"], data=data)
         schema = vol.Schema({vol.Required(CONF_POWER): selector.EntitySelector(
-            selector.EntitySelectorConfig(domain="sensor", device_class="power"))})
+            selector.EntitySelectorConfig(domain=["sensor", "number", "input_number"]))})
         return self.async_show_form(step_id="metered", data_schema=schema)
 
     async def async_step_estimated(self, user_input=None):
@@ -51,7 +51,7 @@ class ApplianceMLConfigFlow(ConfigFlow, domain=DOMAIN):
                 selector.EntitySelectorConfig(domain=["sensor", "binary_sensor", "switch", "select", "input_boolean"])),
             vol.Required(CONF_ACTIVE_STATES, default=DEFAULT_ACTIVE_STATES): str,
             vol.Required(CONF_TOTAL): selector.EntitySelector(
-                selector.EntitySelectorConfig(domain="sensor", device_class="power")),
+                selector.EntitySelectorConfig(domain=["sensor", "number", "input_number"])),
             vol.Optional(CONF_PROGRAM): selector.EntitySelector(
                 selector.EntitySelectorConfig(domain=["sensor", "select", "input_select"])),
         })

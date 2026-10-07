@@ -34,4 +34,4 @@ class Problem(ApplianceEntity, BinarySensorEntity):
     def extra_state_attributes(self):
         from .const import PROBLEM_TEXT
         p = self.manager.monitor.problems
-        return {"gruende": p, "text": "; ".join(PROBLEM_TEXT.get(r, r) for r in p), **self.manager.monitor.summary}
+        return {"reasons": p, "text": "; ".join(PROBLEM_TEXT.get(r, r) for r in p), **self.manager.monitor.summary}

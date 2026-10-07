@@ -13,7 +13,7 @@ class ApplianceEntity(Entity):
     def __init__(self, manager, key: str, name: str):
         self.manager = manager
         self._attr_unique_id = f"{manager.entry.entry_id}_{key}"
-        self._attr_name = name
+        self._attr_translation_key = key
         self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, manager.entry.entry_id)},
                                             name=manager.entry.title, manufacturer="Appliance ML")
 

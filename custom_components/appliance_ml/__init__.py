@@ -19,7 +19,7 @@ from .manager import ApplianceManager
 PLATFORMS = ["sensor", "binary_sensor"]
 PANEL_URL = "appliance-ml"
 STATIC_URL = "/appliance_ml_static"
-VERSION = "1.2.0"
+VERSION = "1.3.0"
 
 
 def _one_mode(item: dict) -> dict:
