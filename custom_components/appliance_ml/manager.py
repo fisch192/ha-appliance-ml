@@ -10,7 +10,7 @@ from homeassistant.helpers.event import async_track_state_change_event, async_tr
 from homeassistant.helpers.storage import Store
 from homeassistant.util import dt as dt_util
 
-from .const import (CONF_ACTIVE_STATES, CONF_ACTIVITY, CONF_END_W, CONF_MAX_END, CONF_MIN_CYCLE, CONF_MODE,
+from .const import (VERSION, CONF_ACTIVE_STATES, CONF_ACTIVITY, CONF_END_W, CONF_MAX_END, CONF_MIN_CYCLE, CONF_MODE,
                     CONF_POWER, CONF_PROGRAM, CONF_START_W, CONF_TOTAL, CONF_TYPE, DEFAULT_ACTIVE_STATES, DOMAIN,
                     EVENT_FINISHED, EVENT_PROBLEM, EVENT_PROBLEM_CLEARED, EVENT_STARTED, PRESETS,
                     PROBLEM_TEXT, SIGNAL)
@@ -332,6 +332,7 @@ class ApplianceManager:
                    "texts": [PROBLEM_TEXT.get(r, r) for r in self.monitor.problems],
                    "daily": self.monitor.daily_series(now), "kind": self.monitor.cfg.kind}
         return {
+            "version": VERSION,
             "monitor": mon,
             "entry_id": self.entry.entry_id, "name": self.entry.title, "type": self.type,
             "mode": self.mode, "power_entity": graph_entity,

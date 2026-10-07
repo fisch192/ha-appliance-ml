@@ -13,13 +13,12 @@ from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.helpers import config_validation as cv
 
 from .const import (CONF_ACTIVE_STATES, CONF_ACTIVITY, CONF_POWER, CONF_PROGRAM, CONF_TOTAL, CONF_TYPE,
-                    DEFAULT_ACTIVE_STATES, DOMAIN, PRESETS)
+                    DEFAULT_ACTIVE_STATES, DOMAIN, PRESETS, VERSION)
 from .manager import ApplianceManager
 
 PLATFORMS = ["sensor", "binary_sensor"]
 PANEL_URL = "appliance-ml"
 STATIC_URL = "/appliance_ml_static"
-VERSION = "1.3.0"
 
 
 def _one_mode(item: dict) -> dict:

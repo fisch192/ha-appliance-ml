@@ -47,3 +47,5 @@ PROBLEM_TEXT = {
 }
 EVENT_PROBLEM = f"{DOMAIN}_problem"
 EVENT_PROBLEM_CLEARED = f"{DOMAIN}_problem_cleared"
+
+VERSION = "1.3.1"

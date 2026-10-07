@@ -205,6 +205,8 @@ const KEYWORDS = {
   dryer: ["trockn", "dryer"], oven: ["ofen", "oven"], fridge: ["kühl", "kuehl", "fridge", "freez", "gefrier"], baseload: ["haus", "house", "total", "gesamt", "grid", "netz"],
 };
 
+const PANEL_VERSION = "1.3.1";
+
 class ApplianceMLPanel extends HTMLElement {
   constructor() {
     super();
@@ -230,7 +232,9 @@ class ApplianceMLPanel extends HTMLElement {
 
   async _refresh(full) {
     try {
-      this._snap = await this._hass.callWS({type: "appliance_ml/snapshot"});
+      this._snap = (await this._hass.callWS({type: "appliance_ml/snapshot"})).map(x => ({
+        mode: "metered", sources: {power_entity: x.power_entity}, history: [], programs: [], config: {}, ...x,
+        programs: (x.programs || []).map(p => ({model: p.curve || [], band_lo: [], band_hi: [], durations_min: [], energies_wh: [], ...p}))}));
       const s = this._snap[this._sel];
       if (s && (full || !this._histAt || Date.now() - this._histAt > 60000)) await this._loadHistory(s);
     } catch (e) { this._error = String(e.message || e); }
@@ -445,6 +449,15 @@ class ApplianceMLPanel extends HTMLElement {
   }
 
   _render() {
+    try { this._renderInner(); this._error = null; }
+    catch (e) {
+      console.error("appliance-ml panel", e);
+      this.shadowRoot.innerHTML = `<style>${STYLE}</style><div class="wrap"><div class="card"><h2 class="err">Appliance ML panel error</h2><pre style="white-space:pre-wrap">${String(e && e.stack || e)}</pre><button id="reset">Reload</button></div></div>`;
+      this.shadowRoot.querySelector("#reset").onclick = () => { this._view = "main"; this._tab = "overview"; this._w = null; this._editing = false; this._render(); };
+    }
+  }
+
+  _renderInner() {
     const t = this.t, s = this._snap[this._sel];
     const root = this.shadowRoot;
     if (!s || this._view === "add") {
@@ -495,7 +508,7 @@ class ApplianceMLPanel extends HTMLElement {
 
     root.innerHTML = `<style>${STYLE}</style><div class="wrap">
       <header><h1>${t.title} · ${s.name}</h1>${sel}<span class="chip ${s.running || (s.monitor && !s.monitor.problems.length) ? "run" : ""}" ${s.monitor && s.monitor.problems.length ? `style="background:var(--error-color,#db4437);color:#fff"` : ""}>${status}</span></header>
-      <nav class="tabs">${[["overview", t.tabOverview], ["learned", t.tabLearned], ["settings", t.tabSettings]].map(([k, l]) =>
+      ${s.version !== PANEL_VERSION ? `<div class="card" style="border-left:6px solid var(--error-color,#db4437);margin-bottom:12px">⚠ Backend ${s.version || "1.1.x (old)"} ≠ panel ${PANEL_VERSION}: the integration code was not reloaded. Restart Home Assistant completely (Settings → System → Restart) so the new Python code is loaded.</div>` : ""}<nav class="tabs">${[["overview", t.tabOverview], ["learned", t.tabLearned], ["settings", t.tabSettings]].map(([k, l]) =>
         `<button data-tab="${k}" class="${this._tab === k ? "on" : ""}">${l}</button>`).join("")}<span class="sp"></span><button class="add" id="addbtn">${t.addAppliance}</button></nav>
       <div class="grid">
         ${this._tab === "overview" ? `
