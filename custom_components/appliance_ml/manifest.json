@@ -1,13 +1,14 @@
 {
   "domain": "appliance_ml",
   "name": "Appliance ML",
-  "version": "1.1.0",
-  "documentation": "https://github.com/",
+  "version": "1.2.0",
+  "documentation": "https://github.com/fisch192/ha-appliance-ml",
   "config_flow": true,
   "integration_type": "service",
   "iot_class": "calculated",
   "dependencies": ["http", "frontend", "panel_custom", "websocket_api"],
   "after_dependencies": ["recorder"],
   "requirements": [],
-  "codeowners": []
+  "issue_tracker": "https://github.com/fisch192/ha-appliance-ml/issues",
+  "codeowners": ["@fisch192"]
 }

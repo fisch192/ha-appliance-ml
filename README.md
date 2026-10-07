@@ -54,6 +54,25 @@ appliance_ml:
 ```
 The entry is created once on startup and can afterwards be changed in the panel.
 
+## Appliances without their own power sensor (estimated mode)
+If a machine has no metering plug, use `activity_entity` (an entity whose state says it is running,
+e.g. a Home Connect operation state) plus `total_power_entity` (house/circuit power). The integration
+learns the appliance's share from the change in total power while it runs. Optional `program_entity`
+reports the program name.
+```yaml
+appliance_ml:
+  - name: Dishwasher
+    appliance_type: dishwasher
+    activity_entity: sensor.dishwasher_operation_state
+    active_states: run,running
+    total_power_entity: sensor.house_power
+```
+
+## Monitor types (fridge, baseload)
+`fridge` and `baseload` do not detect programs; they watch energy use, compressor duty and standby
+power and fire `appliance_ml_problem` / `appliance_ml_problem_cleared` events when something drifts
+(e.g. compressor running continuously, no power readings).
+
 ## Notification example
 See `packages/appliance_ml_notify.yaml` (event-triggered automation).
 
@@ -66,7 +85,7 @@ change them in the panel. If your machine has long soak pauses with very low pow
 learned quiet time adapts after a few cycles.
 
 ## Development
-`python3 tests/test_engine.py` replays 12 recorded washing-machine programs (`tests/recorded_cycles.json`); `python3 tests/test_appliances.py` uses synthetic dishwasher/dryer curves.
+`python3 tests/test_engine.py` replays 12 recorded washing-machine programs (`tests/recorded_cycles.json`); `python3 tests/test_appliances.py` uses synthetic dishwasher/dryer curves; `tests/test_estimator.py` and `tests/test_monitor.py` cover estimated mode and the monitors.
 `python3 tests/replay.py` prints, per program, the delay between last spin and alert.
 The Home Assistant glue (config flow, entities, panel) was developed against HA 2026.x; the
 engine is covered by tests, the integration layer was checked syntactically and the panel was

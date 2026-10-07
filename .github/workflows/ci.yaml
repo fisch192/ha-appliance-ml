@@ -9,6 +9,8 @@ jobs:
         with: {python-version: "3.12"}
       - run: python tests/test_engine.py
       - run: python tests/test_appliances.py
+      - run: python tests/test_estimator.py
+      - run: python tests/test_monitor.py
       - run: node --check custom_components/appliance_ml/frontend/appliance-ml-panel.js
   hassfest:
     runs-on: ubuntu-latest

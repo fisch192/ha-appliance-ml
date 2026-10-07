@@ -12,20 +12,33 @@ from . import websocket_api
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.helpers import config_validation as cv
 
-from .const import CONF_POWER, CONF_TYPE, DOMAIN, PRESETS
+from .const import (CONF_ACTIVE_STATES, CONF_ACTIVITY, CONF_POWER, CONF_PROGRAM, CONF_TOTAL, CONF_TYPE,
+                    DEFAULT_ACTIVE_STATES, DOMAIN, PRESETS)
 from .manager import ApplianceManager
 
 PLATFORMS = ["sensor", "binary_sensor"]
 PANEL_URL = "appliance-ml"
 STATIC_URL = "/appliance_ml_static"
-VERSION = "1.1.0"
+VERSION = "1.2.0"
 
 
-_ITEM = vol.Schema({
+def _one_mode(item: dict) -> dict:
+    if (CONF_POWER in item) == (CONF_ACTIVITY in item):
+        raise vol.Invalid("use either power_entity (metered) or activity_entity + total_power_entity (estimated)")
+    if CONF_ACTIVITY in item and CONF_TOTAL not in item:
+        raise vol.Invalid("estimated mode needs total_power_entity")
+    return item
+
+
+_ITEM = vol.All(vol.Schema({
     vol.Required("name"): cv.string,
     vol.Optional(CONF_TYPE, default="washing_machine"): vol.In(list(PRESETS)),
-    vol.Required(CONF_POWER): cv.entity_id,
-})
+    vol.Optional(CONF_POWER): cv.entity_id,
+    vol.Optional(CONF_ACTIVITY): cv.entity_id,
+    vol.Optional(CONF_ACTIVE_STATES, default=DEFAULT_ACTIVE_STATES): cv.string,
+    vol.Optional(CONF_TOTAL): cv.entity_id,
+    vol.Optional(CONF_PROGRAM): cv.entity_id,
+}), _one_mode)
 CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.All(cv.ensure_list, [_ITEM])}, extra=vol.ALLOW_EXTRA)
 
 

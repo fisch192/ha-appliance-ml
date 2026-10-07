@@ -55,7 +55,7 @@ class ApplianceTests(unittest.TestCase):
         self.assertLess(fin[0]["detected_at"] - last_active, 10 * 60)
 
     def test_short_blip_is_not_a_program(self):
-        for kind in PRESETS:
+        for kind in (k for k, v in PRESETS.items() if not v.get("monitor")):
             e = Engine(cfg(kind))
             evs, _ = run(e, [(500, 120), (1, 60)])
             self.assertFalse([x for x in evs if x["type"] == "finished"], kind)
